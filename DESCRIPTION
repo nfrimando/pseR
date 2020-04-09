@@ -1,0 +1,20 @@
+Package: pseR
+Title: Pull and Analyse PSE Data using R
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Nigel",
+           family = "Rimando",
+           role = c("aut", "cre"),
+           email = "nfrimando@gmail.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Pull and Analyse PSE Data using R.
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.2
+Imports:
+	dplyr,
+	rvest,
+	glue,
+	stringr,
+	assertthat
