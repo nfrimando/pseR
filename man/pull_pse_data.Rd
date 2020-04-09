@@ -7,7 +7,7 @@
 pull_pse_data(code)
 }
 \arguments{
-\item{code}{Stock Code from PSE (e.g. JFC, FMETF, BPI)}
+\item{code}{Vector of Stock Code(s) from PSE (e.g. JFC, FMETF, BPI)}
 }
 \value{
 A dataframe with available historical stock data
