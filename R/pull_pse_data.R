@@ -19,7 +19,7 @@
 pull_pse_data <- function(code) {
   
   all_historical.dt <- map_df(
-    code,
+    unique(code),
     function(code) {
       
       message(glue("Pulling data for {code}"))
@@ -47,14 +47,14 @@ pull_pse_data <- function(code) {
         transmute(
           code = code,
           date = format.Date(strptime(Date, "%b %d, %Y"), '%Y-%m-%d'),
-          close = as.numeric(`Last Price`),
-          change = `Change`,
-          open = `Open`,
-          low = `Low`,
-          high = `High`
+          close = str_replace_all(`Last Price`, ",", ""),
+          change = str_replace_all(`Change`, ",", ""),
+          open = str_replace_all(`Open`, ",", ""),
+          low = str_replace_all(`Low`, ",", ""),
+          high = str_replace_all(`High`, ",", "")
         ) %>% 
         mutate_at(
-          c("change", "open", "low", "high"),
+          c("close", "change", "open", "low", "high"),
           as.numeric
         )
       

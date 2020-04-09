@@ -1,0 +1,49 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# pseR
+
+Pull and analyse PSE data. Currently limited only to Investagrams as source which is limited to past year data only.
+
+## Installation
+
+Install devtools to easily install `pseR`. 
+
+```{r eval = FALSE}
+install.packages("devtools")
+devtools::install_github("nfrimando/pseR")
+```
+
+## Examples
+
+Extract historical PSE data with `pull_pse_data()`
+
+```{r message = FALSE, warning = FALSE}
+suppressPackageStartupMessages({library(pseR); library(dplyr)}) 
+stock.dt <- pull_pse_data(c("JFC", "MBT", "FGEN","BPI", "URC",
+                            "ALI", "MER", "ABS", "GLO"))
+stock.dt %>% head()
+```
+
+## Analytics using `tidyquant`
+
+The package [`tidyquant`](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html) has convenient functions that allows easy implementation for visualisation and analysis.
+
+```{r}
+suppressPackageStartupMessages({library(tidyquant); library(ggplot2)})
+stock.dt %>%
+  ggplot(aes(x = as.Date(date), y = close)) +
+  geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+  labs(title = "PSE Stocks Daily Past 1 Year", y = "Closing Price", x = "") + 
+  facet_wrap(~code, scales = "free") + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %d") + 
+  theme_tq()
+```
+
