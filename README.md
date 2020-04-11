@@ -18,11 +18,11 @@ devtools::install_github("nfrimando/pseR")
 Examples
 --------
 
-Extract historical PSE data with `pull_pse_data()`
+Extract historical PSE data with `pse_get()`
 
 ``` r
 suppressPackageStartupMessages({library(pseR); library(dplyr)}) 
-stock.dt <- pull_pse_data(c("JFC", "MBT", "FGEN","BPI", "URC",
+stock.dt <- pse_get(c("JFC", "MBT", "FGEN","BPI", "URC",
                             "ALI", "MER", "ABS", "GLO"))
 stock.dt %>% head()
 ```
@@ -38,7 +38,7 @@ stock.dt %>% head()
 Analytics using `tidyquant`
 ---------------------------
 
-The package [`tidyquant`](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html) has convenient functions that allows easy implementation for visualisation and analysis.
+The package [`tidyquant`](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html) has convenient functions that allows easy implementation for visualisation and analysis. (It also has functions to pull data for PSE from various sources. The easy-to-access sources though are usually not updated. E.g. Yahoo Finance!).
 
 ``` r
 suppressPackageStartupMessages({library(tidyquant); library(ggplot2)})
