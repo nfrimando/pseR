@@ -15,8 +15,8 @@
 #' @export
 #' 
 #' @examples 
-#' pull_pse_data("JFC")
-pull_pse_data <- function(code) {
+#' pse_get("JFC")
+pse_get <- function(code) {
   
   all_historical.dt <- map_df(
     unique(code),
@@ -61,6 +61,6 @@ pull_pse_data <- function(code) {
       return(historical.dt)
     }
   )
-
+  
   return(all_historical.dt)
 }
