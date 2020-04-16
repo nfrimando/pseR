@@ -19,3 +19,6 @@ Depends:
 	stringr,
 	assertthat,
 	purrr
+Collate: 
+    'scrape_investagram.R'
+    'pse_get.R'

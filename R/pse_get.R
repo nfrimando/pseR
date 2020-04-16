@@ -12,32 +12,23 @@
 #' @importFrom glue glue
 #' @importFrom assertthat assert_that
 #' @importFrom purrr map_df
+#' 
+#' @include scrape_investagram.R
+#' 
 #' @export
 #' 
 #' @examples 
 #' pse_get("JFC")
 pse_get <- function(code) {
-  
+
+  stock_info.list <- scrape_investagram(code)
+    
+  # Combining into one dataframe
   all_historical.dt <- map_df(
-    unique(code),
-    function(code) {
+    stock_info.list,
+    function(stock_info) {
       
-      message(glue("Pulling data for {code}"))
-      
-      url <- glue("https://www.investagrams.com/Stock/{code}")
-      
-      # Extract Data From Investagrams Historical Table
-      html_content <- url %>%
-        read_html() %>%
-        html_nodes(xpath = '//*[@id="HistoricalDataTable"]') %>%
-        html_table()
-      
-      assert_that(
-        length(html_content) != 0,
-        msg = "No Data Extracted. Please Check if Stock Code is Valid"
-      )
-      
-      historical.dt.raw <- html_content[[1]]
+      historical.dt.raw <- stock_info$historical_data
       
       # Use First Row as Column Names
       colnames(historical.dt.raw) <- historical.dt.raw[1,]
