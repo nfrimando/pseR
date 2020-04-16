@@ -35,7 +35,7 @@ scrape_investagram <- function(code, details = c("hist")) {
           msg = "No Data Extracted. Please Check if Stock Code is Valid"
         )
         
-        stock_information.list[[code]]$historical_data <- html_content[[1]]
+        stock_information.list[[i]]$historical_data <- html_content[[1]]
       }
   
   }
