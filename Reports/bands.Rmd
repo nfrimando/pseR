@@ -30,7 +30,6 @@ This report outlines Blue Chip companies with their support and resistance bands
 
 ```{r}
 days_look_back <- 90
-top_codes <- 10
 stock_code_info.dt <- 
   # Blue Chips
   data.frame(
@@ -54,6 +53,8 @@ stock_code_info.dt <-
       class = rep("Concept Play", 7)
     )
   )
+
+top_codes <- (stock_code_info.dt %>% filter(class == params$stock_type))$codes %>% length()
 
 stocks.dt <- scrape_investagram(as.character((stock_code_info.dt %>% filter(class == params$stock_type))$codes)) %>% 
   map_df(

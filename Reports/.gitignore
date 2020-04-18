@@ -2,3 +2,4 @@
 
 !.gitignore
 !bands.Rmd
+!generate_reports.R
