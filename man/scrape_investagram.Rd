@@ -4,12 +4,13 @@
 \alias{scrape_investagram}
 \title{Scrape Investagram Stock Info}
 \usage{
-scrape_investagram(code, details = c("hist"))
+scrape_investagram(code, details = c("hist", "bands"))
 }
 \arguments{
 \item{code}{Vector of Stock Code(s) from PSE (e.g. JFC, FMETF, BPI)}
 
-\item{details}{Vector containing details to scrape. `hist` - dataframe of historical data}
+\item{details}{Vector containing details to scrape. `hist` - dataframe of historical data. 
+`bands` - basic analytics}
 }
 \value{
 A list with investagram information
