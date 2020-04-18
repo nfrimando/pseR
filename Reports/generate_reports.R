@@ -6,7 +6,7 @@ library(janitor)
 ## Support vs Resistance ########################
 #################################################
 
-for (type in c("Blue Chip", "Alternative", "Concept Play")) {
+for (type in c("Blue Chip", "Alternative", "Concept Play", "My Portfolio")) {
   rmarkdown::render(
     input = "Reports/bands.Rmd", 
     params = list(

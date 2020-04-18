@@ -7,7 +7,7 @@ params:
   stock_type:
     label: "Stock Type"
     input: select
-    choices: [Blue Chip, Alternative, Concept Play]
+    choices: [Blue Chip, Alternative, Concept Play, My Portfolio]
     value: "Blue Chip"
 ---
 
@@ -42,8 +42,8 @@ stock_code_info.dt <-
   rbind(
     data.frame(
       codes = c("AXLM", "FRUIT", "DNL", "WLCON", "HOME", "EEI", "MAC", "MWIDE",
-                "ACEPH", "FB", "SSI", "BLOOM"),
-      class = rep("Alternative", 12)
+                "ACEPH", "FB", "SSI", "BLOOM", "MPI"),
+      class = rep("Alternative", 13)
     )
   ) %>% 
   # Concept Play
@@ -51,6 +51,14 @@ stock_code_info.dt <-
     data.frame(
       codes = c("IMI", "DITO", "TECH", "NIKL", "PXP", "ALLHC", "IDC"),
       class = rep("Concept Play", 7)
+    )
+  ) %>% 
+  # My Portfolio
+  rbind(
+    data.frame(
+      codes = c("FMETF", "ABS", "ALI", "BPI", "FGEN", "FRUIT", "LTG", 
+                "MAXS", "MBT", "MER", "PIZZA"),
+      class = rep("My Portfolio", 11)
     )
   )
 
