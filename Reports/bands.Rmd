@@ -24,7 +24,7 @@ library(gt)
 
 # Purpose
 
-This report outlines Blue Chip companies with their support and resistance bands scraped from [Investagram](https://www.investagrams.com/Home/).
+This report outlines `r params$stock_type` companies with their support and resistance bands scraped from [Investagram](https://www.investagrams.com/Home/).
 
 # Summary Data {.tabset}
 
