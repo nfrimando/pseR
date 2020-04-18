@@ -1,0 +1,277 @@
+---
+title: "Support and Resistance"
+author: "Nigel Rimando"
+date: "`r Sys.Date()`"
+output: html_document
+params:
+  stock_type:
+    label: "Stock Type"
+    input: select
+    choices: [Blue Chip, Alternative, Concept Play]
+    value: "Blue Chip"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+library(pseR) # devtools::install_github("nfrimando/pseR")
+library(tidyquant)
+library(ggplot2)
+library(tidyverse)
+library(glue)
+library(magrittr)
+library(gt)
+```
+
+# Purpose
+
+This report outlines Blue Chip companies with their support and resistance bands scraped from [Investagram](https://www.investagrams.com/Home/).
+
+# Summary Data {.tabset}
+
+```{r}
+days_look_back <- 90
+top_codes <- 10
+stock_code_info.dt <- 
+  # Blue Chips
+  data.frame(
+    codes = c("AC", "AEV", "AGI", "ALI", "AP", "BDO", "BPI", "DMC", "FGEN", "GLO",
+              "GTCAP", "ICT", "JFC", "JGS", "LTG", "MBT", "MEG", "MER", "MPI", "PCOR",
+              "PGOLD", "RLC", "RRHI", "SCC", "SECB", "SM", "SMC", "SMPH", "TEL", "URC"),
+    class = rep("Blue Chip", 30)
+  ) %>% 
+  # Alternative
+  rbind(
+    data.frame(
+      codes = c("AXLM", "FRUIT", "DNL", "WLCON", "HOME", "EEI", "MAC", "MWIDE",
+                "ACEPH", "FB", "SSI", "BLOOM"),
+      class = rep("Alternative", 12)
+    )
+  ) %>% 
+  # Concept Play
+  rbind(
+    data.frame(
+      codes = c("IMI", "DITO", "TECH", "NIKL", "PXP", "ALLHC", "IDC"),
+      class = rep("Concept Play", 7)
+    )
+  )
+
+stocks.dt <- scrape_investagram(as.character((stock_code_info.dt %>% filter(class == params$stock_type))$codes)) %>% 
+  map_df(
+    function(x) {
+      last_close <- (x$data %>% arrange(desc(date)))$close[1]
+
+      x$data %>% 
+        mutate(
+          support_1 = x$bands$support_1,
+          support_2 = x$bands$support_2,
+          resist_1 = x$bands$resist_1,
+          resist_2 = x$bands$resist_2
+        ) %>% 
+        filter(date >= Sys.Date() - days_look_back) %>% 
+        mutate(last_close = last_close)
+    },
+    .id = "code"
+  )
+```
+
+```{r}
+# Create Summary Table
+summary.dt <- stocks.dt %>% 
+  group_by(code) %>% arrange(desc(date)) %>% 
+  filter(row_number() == 1) %>% 
+  mutate(perc_diff_support_1 = (last_close - support_1)/last_close) %>% 
+  mutate(perc_diff_support_2 = (last_close - support_2)/last_close) %>% 
+  mutate(perc_diff_resist_1 = (last_close - resist_1)/last_close) %>% 
+  mutate(perc_diff_resist_2 = (last_close - resist_2)/last_close) %>% 
+  mutate(potential_gain = (resist_1 - last_close)/last_close) %>% 
+  mutate(potential_loss = -(last_close - support_1)/last_close) %>%
+  mutate(potential_gain_2 = (resist_2 - last_close)/last_close) %>% 
+  mutate(potential_loss_2 = -(last_close - support_2)/last_close) %>%
+  select(code, close, support_1, resist_1, 
+         perc_diff_support_1, perc_diff_support_2,
+         perc_diff_resist_1, perc_diff_resist_2, 
+         support_2, resist_2,
+         potential_gain, potential_loss,
+         potential_gain_2, potential_loss_2) %>% 
+  ungroup()
+```
+
+* close - last closing price as of report run
+* perc_diff_ - difference based on last close price (denominator is close price)
+
+$$ \text{Percent Difference} = \frac{\text{Closing Price} - \text{Price of Interest}}{\text{Closing Price}} $$
+
+## Close to Support (Buy Signal)
+
+* potential_gain - if i buy now, the % gain if I hit resistance
+* potential_loss_2 - if i buy now, the % loss if we breach support 1 and reach support 2
+
+```{r}
+summary.dt %>%
+  arrange(perc_diff_support_1) %T>% 
+  {dt <- .; buy_signals.dt <<- dt %>% head(top_codes)} %>% 
+  select(code, close, support_1, support_2, perc_diff_support_1, perc_diff_support_2,
+         potential_gain, potential_loss_2, resist_1, resist_2) %>% 
+  gt() %>% 
+  tab_header(
+    title = "Prices Closest to Support",
+    subtitle = glue("As of {Sys.Date()}")
+  ) %>% 
+  fmt_currency(
+    columns = vars(close, support_1, support_2),
+    currency = "PHP"
+  ) %>% 
+  fmt_percent(
+    columns = vars(perc_diff_support_1, perc_diff_support_2, potential_gain, potential_loss_2)
+  ) %>% 
+  data_color(
+    columns = vars(perc_diff_support_1, perc_diff_support_2),
+    colors = scales::col_numeric(
+      palette = c("green", "yellow", "red"),
+      domain = NULL
+    )
+  )
+  
+```
+
+## Close to Resistance (Sell Signal)
+
+* potential_loss - if I don't sell now, the % I would lose if hit support
+* potential_gain_2 - if I sell now, the % I would have gotten if I chose to hold
+
+```{r}
+summary.dt %>%
+  arrange(desc(perc_diff_resist_1)) %T>% 
+  {dt <- .; sell_signals.dt <<- dt %>% head(top_codes)} %>%
+  select(code, close, resist_1, resist_2, perc_diff_resist_1, perc_diff_resist_2,
+         potential_loss, potential_gain_2, resist_1, resist_2) %>% 
+  gt() %>% 
+  tab_header(
+    title = "Prices Closest to Resist",
+    subtitle = glue("As of {Sys.Date()}")
+  ) %>% 
+  fmt_currency(
+    columns = vars(close, resist_1, resist_2),
+    currency = "PHP"
+  ) %>% 
+  fmt_percent(
+    columns = vars(perc_diff_resist_1, perc_diff_resist_2, potential_loss, potential_gain_2)
+  ) %>% 
+  data_color(
+    columns = vars(perc_diff_resist_1, perc_diff_resist_2),
+    colors = scales::col_numeric(
+      palette = rev(c("green", "yellow", "red")),
+      domain = NULL
+    )
+  )
+```
+
+#
+
+-------------
+
+# Charts
+
+## Top `r top_codes` Close to Support {.tabset}
+
+```{r results = 'asis', fig.width = 10}
+
+cat("\n")
+
+codes <- factor(buy_signals.dt$code, levels = buy_signals.dt$code)
+
+for (i in codes) {
+  cat(glue("### {i} \n\n"))
+  
+  plot <- stocks.dt %>%
+    filter(code == !!i) %>%
+    arrange(date) %>% mutate(latest_close_price = tail(close, 1)) %>% 
+    mutate(potential_gain = (resist_1 - last_close)/last_close) %>% 
+    mutate(potential_loss = (last_close - support_1)/last_close) %>% 
+    mutate(potential_gain_2 = (resist_2 - last_close)/last_close) %>% 
+    mutate(potential_loss_2 = (last_close - support_2)/last_close) %>%
+    ggplot(aes(x = as.Date(date), y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    labs(title = glue("{i} Daily Past {days_look_back} Days with Bands"), y = "Price", x = "") +
+    facet_wrap(~code, scales = "free", ncol = 2) +
+    scale_x_date(date_breaks = "3 months", date_labels = "%b %d") +
+    theme_tq() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = last_close, label = last_close, vjust = 0), color = "blue") +
+    geom_hline(mapping = aes(yintercept = support_1), linetype = "dashed", color = "blue") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = support_1, 
+                            label = glue("{support_1} ({round(potential_loss*100,2)})%"), vjust = 1),
+              color = "red") +
+    geom_hline(mapping = aes(yintercept = support_2), linetype = "dotted", color = "blue") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = support_2, 
+                            label = glue("{support_2} ({round(potential_loss_2*100,2)})%"), vjust = 1), 
+              color = "red") +
+    geom_hline(mapping = aes(yintercept = resist_1), linetype = "dashed", color = "red") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = resist_1, 
+                            label = glue("{resist_1} ({round(potential_gain*100,2)})%"), vjust = -1),
+              color = "green") +
+    geom_hline(mapping = aes(yintercept = resist_2), linetype = "dotted", color = "red") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = resist_2, 
+                            label = glue("{resist_2} ({round(potential_gain_2*100,2)})%"), vjust = -1), 
+              color = "green")
+  
+  print(plot)
+  
+  cat("\n\n")
+}
+
+```
+
+##
+
+## Top `r top_codes` Close to Resistance {.tabset}
+
+```{r results = 'asis', fig.width = 10}
+
+cat("\n")
+
+codes <- factor(sell_signals.dt$code, levels = sell_signals.dt$code)
+
+for (i in codes) {
+  cat(glue("### {i} \n\n"))
+  
+  plot <- stocks.dt %>%
+    filter(code == !!i) %>%
+    arrange(date) %>% mutate(latest_close_price = tail(close, 1)) %>% 
+    mutate(potential_gain = (resist_1 - last_close)/last_close) %>% 
+    mutate(potential_loss = (last_close - support_1)/last_close) %>% 
+    mutate(potential_gain_2 = (resist_2 - last_close)/last_close) %>% 
+    mutate(potential_loss_2 = (last_close - support_2)/last_close) %>%
+    ggplot(aes(x = as.Date(date), y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    labs(title = glue("{i} Daily Past {days_look_back} Days with Bands"), y = "Price", x = "") +
+    facet_wrap(~code, scales = "free", ncol = 2) +
+    scale_x_date(date_breaks = "3 months", date_labels = "%b %d") +
+    theme_tq() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = last_close, label = last_close, vjust = 0), color = "blue") +
+    geom_hline(mapping = aes(yintercept = support_1), linetype = "dashed", color = "blue") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = support_1, 
+                            label = glue("{support_1} ({round(potential_loss*100,2)})%"), vjust = 1),
+              color = "red") +
+    geom_hline(mapping = aes(yintercept = support_2), linetype = "dotted", color = "blue") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = support_2, 
+                            label = glue("{support_2} ({round(potential_loss_2*100,2)})%"), vjust = 1), 
+              color = "red") +
+    geom_hline(mapping = aes(yintercept = resist_1), linetype = "dashed", color = "red") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = resist_1, 
+                            label = glue("{resist_1} ({round(potential_gain*100,2)})%"), vjust = -1),
+              color = "green") +
+    geom_hline(mapping = aes(yintercept = resist_2), linetype = "dotted", color = "red") +
+    geom_text(mapping = aes(x = Sys.Date() + 3, y = resist_2, 
+                            label = glue("{resist_2} ({round(potential_gain_2*100,2)})%"), vjust = -1), 
+              color = "green")
+  
+  print(plot)
+  
+  cat("\n\n")
+}
+
+```
+
+##
