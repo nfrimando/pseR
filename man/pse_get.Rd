@@ -4,10 +4,10 @@
 \alias{pse_get}
 \title{Pull Historical PSE Data}
 \usage{
-pse_get(code)
+pse_get(codes)
 }
 \arguments{
-\item{code}{Vector of Stock Code(s) from PSE (e.g. JFC, FMETF, BPI)}
+\item{codes}{Vector of Stock Code(s) from PSE (e.g. JFC, FMETF, BPI)}
 }
 \value{
 A dataframe with available historical stock data

@@ -101,6 +101,7 @@ scrape_investagram_indiv <- function(code, details = c("hist", "bands")) {
 #' 
 #' @importFrom assertthat assert_that
 #' 
+#' @export
 #' @examples 
 #' scrape_investagram(codes = c("JFC", "GLO"))
 scrape_investagram <- function(codes, details = c("hist", "bands")) {
