@@ -26,6 +26,13 @@ library(gt)
 
 This report outlines `r params$stock_type` companies with their support and resistance bands scraped from [Investagram](https://www.investagrams.com/Home/).
 
+DO NOT MAKE THESE MISTAKES: https://www.youtube.com/watch?v=IbEQiCGgKcE
+
+* The more times SR is tested within a short period of time, the weaker it becomes
+* Don't set your stops just below support (or resistance)
+* Don't buy chop move into support (avoid many mini resistance or support levels)
+* Don't treat SR as lines -- treat them as ares
+
 # Summary Data {.tabset}
 
 ```{r}
