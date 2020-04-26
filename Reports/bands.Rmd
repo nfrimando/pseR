@@ -3,12 +3,6 @@ title: "Support and Resistance"
 author: "Nigel Rimando"
 date: "`r Sys.Date()`"
 output: html_document
-params:
-  stock_type:
-    label: "Stock Type"
-    input: select
-    choices: [Blue Chip, Alternative, Concept Play, My Portfolio]
-    value: "Blue Chip"
 ---
 
 ```{r setup, include=FALSE}
@@ -24,7 +18,7 @@ library(gt)
 
 # Purpose
 
-This report outlines `r params$stock_type` companies with their support and resistance bands scraped from [Investagram](https://www.investagrams.com/Home/).
+This report outlines companies with their support and resistance bands scraped from [Investagram](https://www.investagrams.com/Home/).
 
 DO NOT MAKE THESE MISTAKES: https://www.youtube.com/watch?v=IbEQiCGgKcE
 
@@ -49,8 +43,9 @@ stock_code_info.dt <-
   rbind(
     data.frame(
       codes = c("AXLM", "FRUIT", "DNL", "WLCON", "HOME", "EEI", "MAC", "MWIDE",
-                "ACEPH", "FB", "SSI", "BLOOM", "MPI"),
-      class = rep("Alternative", 13)
+                "ACEPH", "FB", "SSI", "BLOOM", "MPI", "NOW", "MAXS", "PIZZA", 
+                "FMETF"),
+      class = rep("Alternative", 17)
     )
   ) %>% 
   # Concept Play
@@ -60,18 +55,14 @@ stock_code_info.dt <-
       class = rep("Concept Play", 7)
     )
   ) %>% 
-  # My Portfolio
-  rbind(
-    data.frame(
-      codes = c("FMETF", "ABS", "ALI", "BPI", "FGEN", "FRUIT", "LTG", 
-                "MAXS", "MBT", "MER", "PIZZA"),
-      class = rep("My Portfolio", 11)
-    )
+  # Mark In Portfolio
+  mutate(
+    in_portfolio = codes %in% c("FMETF", "AGI", "ALI", "BPI", "FGEN", "LTG", "MER", "PIZZA", "URC", "EEI")
   )
 
-top_codes <- (stock_code_info.dt %>% filter(class == params$stock_type))$codes %>% length()
+top_codes <- stock_code_info.dt %>% nrow
 
-stocks.dt <- scrape_investagram(as.character((stock_code_info.dt %>% filter(class == params$stock_type))$codes)) %>% 
+stocks.dt <- scrape_investagram(as.character(stock_code_info.dt$codes)) %>% 
   map_df(
     function(x) {
       last_close <- (x$data %>% arrange(desc(date)))$close[1]
@@ -90,7 +81,7 @@ stocks.dt <- scrape_investagram(as.character((stock_code_info.dt %>% filter(clas
   )
 ```
 
-```{r}
+```{r message = FALSE}
 # Create Summary Table
 summary.dt <- stocks.dt %>% 
   group_by(code) %>% arrange(desc(date)) %>% 
@@ -103,7 +94,9 @@ summary.dt <- stocks.dt %>%
   mutate(potential_loss = -(last_close - support_1)/last_close) %>%
   mutate(potential_gain_2 = (resist_2 - last_close)/last_close) %>% 
   mutate(potential_loss_2 = -(last_close - support_2)/last_close) %>%
-  select(code, close, support_1, resist_1, 
+  ungroup() %>% 
+  inner_join(stock_code_info.dt, by = c("code" = "codes")) %>% 
+  select(code, class, in_portfolio, close, support_1, resist_1, 
          perc_diff_support_1, perc_diff_support_2,
          perc_diff_resist_1, perc_diff_resist_2, 
          support_2, resist_2,
@@ -122,11 +115,11 @@ $$ \text{Percent Difference} = \frac{\text{Closing Price} - \text{Price of Inter
 * potential_gain - if i buy now, the % gain if I hit resistance
 * potential_loss_2 - if i buy now, the % loss if we breach support 1 and reach support 2
 
-```{r}
+```{r message = FALSE}
 summary.dt %>%
   arrange(perc_diff_support_1) %T>% 
   {dt <- .; buy_signals.dt <<- dt %>% head(top_codes)} %>% 
-  select(code, close, support_1, support_2, perc_diff_support_1, perc_diff_support_2,
+  select(code, class, in_portfolio, close, support_1, support_2, perc_diff_support_1, perc_diff_support_2,
          potential_gain, potential_loss_2, resist_1, resist_2) %>% 
   gt() %>% 
   tab_header(
@@ -146,7 +139,28 @@ summary.dt %>%
       palette = c("green", "yellow", "red"),
       domain = NULL
     )
-  )
+  ) %>% 
+  tab_style(
+    style = cell_fill(color = "lightblue"),
+    locations = cells_body(
+      columns = vars(in_portfolio),
+      rows = in_portfolio
+    )
+  ) %>% 
+  tab_style(
+    style = cell_fill(color = "lightyellow"),
+    locations = cells_body(
+      columns = vars(in_portfolio),
+      rows = !in_portfolio
+    )
+  ) %>% 
+  tab_style(
+    style = cell_fill(color = "lightgreen"),
+    locations = cells_body(
+      columns = vars(class),
+      rows = class == "Blue Chip"
+    )
+  ) 
   
 ```
 
@@ -159,7 +173,7 @@ summary.dt %>%
 summary.dt %>%
   arrange(desc(perc_diff_resist_1)) %T>% 
   {dt <- .; sell_signals.dt <<- dt %>% head(top_codes)} %>%
-  select(code, close, resist_1, resist_2, perc_diff_resist_1, perc_diff_resist_2,
+  select(code, class, in_portfolio, close, resist_1, resist_2, perc_diff_resist_1, perc_diff_resist_2,
          potential_loss, potential_gain_2, resist_1, resist_2) %>% 
   gt() %>% 
   tab_header(
@@ -179,7 +193,28 @@ summary.dt %>%
       palette = rev(c("green", "yellow", "red")),
       domain = NULL
     )
-  )
+  ) %>% 
+  tab_style(
+    style = cell_fill(color = "lightblue"),
+    locations = cells_body(
+      columns = vars(in_portfolio),
+      rows = in_portfolio
+    )
+  ) %>% 
+  tab_style(
+    style = cell_fill(color = "lightyellow"),
+    locations = cells_body(
+      columns = vars(in_portfolio),
+      rows = !in_portfolio
+    )
+  ) %>% 
+  tab_style(
+    style = cell_fill(color = "lightgreen"),
+    locations = cells_body(
+      columns = vars(class),
+      rows = class == "Blue Chip"
+    )
+  ) 
 ```
 
 #
