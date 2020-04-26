@@ -43,9 +43,9 @@ stock_code_info.dt <-
   rbind(
     data.frame(
       codes = c("AXLM", "FRUIT", "DNL", "WLCON", "HOME", "EEI", "MAC", "MWIDE",
-                "ACEPH", "FB", "SSI", "BLOOM", "MPI", "NOW", "MAXS", "PIZZA", 
+                "ACEPH", "FB", "SSI", "BLOOM", "NOW", "MAXS", "PIZZA", 
                 "FMETF"),
-      class = rep("Alternative", 17)
+      class = rep("Alternative", 16)
     )
   ) %>% 
   # Concept Play
@@ -60,7 +60,7 @@ stock_code_info.dt <-
     in_portfolio = codes %in% c("FMETF", "AGI", "ALI", "BPI", "FGEN", "LTG", "MER", "PIZZA", "URC", "EEI")
   )
 
-top_codes <- stock_code_info.dt %>% nrow
+top_codes <- 30
 
 stocks.dt <- scrape_investagram(as.character(stock_code_info.dt$codes)) %>% 
   map_df(
