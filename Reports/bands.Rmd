@@ -81,7 +81,7 @@ stocks.dt <- scrape_investagram(as.character(stock_code_info.dt$codes)) %>%
   )
 ```
 
-```{r message = FALSE}
+```{r message = FALSE, warning = FALSE}
 # Create Summary Table
 summary.dt <- stocks.dt %>% 
   group_by(code) %>% arrange(desc(date)) %>% 
@@ -115,7 +115,7 @@ $$ \text{Percent Difference} = \frac{\text{Closing Price} - \text{Price of Inter
 * potential_gain - if i buy now, the % gain if I hit resistance
 * potential_loss_2 - if i buy now, the % loss if we breach support 1 and reach support 2
 
-```{r message = FALSE}
+```{r message = FALSE, warning = FALSE}
 summary.dt %>%
   arrange(perc_diff_support_1) %T>% 
   {dt <- .; buy_signals.dt <<- dt %>% head(top_codes)} %>% 
