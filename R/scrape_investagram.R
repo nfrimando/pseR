@@ -44,12 +44,13 @@ scrape_investagram_indiv <- function(code, details = c("hist", "bands")) {
         date = format.Date(strptime(Date, "%b %d, %Y"), '%Y-%m-%d'),
         close = str_replace_all(`Last Price`, ",", ""),
         change = str_replace_all(`Change`, ",", ""),
+        perc_change = str_replace_all(`%Change`, "%", ""),
         open = str_replace_all(`Open`, ",", ""),
         low = str_replace_all(`Low`, ",", ""),
         high = str_replace_all(`High`, ",", "")
       ) %>% 
       mutate_at(
-        c("close", "change", "open", "low", "high"),
+        c("close", "change", "perc_change", "open", "low", "high"),
         as.numeric
       )
     
