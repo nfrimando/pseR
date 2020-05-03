@@ -27,13 +27,13 @@ stock.dt <- pse_get(c("JFC", "MBT", "FGEN","BPI", "URC",
 stock.dt %>% head()
 ```
 
-    ##   code       date close change  open   low  high
-    ## 1  JFC 2020-04-17 145.0    3.5 142.0 141.4 147.0
-    ## 2  JFC 2020-04-16 141.5   -7.1 147.0 137.4 147.0
-    ## 3  JFC 2020-04-15 148.6    2.1 150.0 143.5 152.1
-    ## 4  JFC 2020-04-14 146.5   11.5 139.9 139.8 148.0
-    ## 5  JFC 2020-04-13 135.0   15.0 121.0 121.0 136.1
-    ## 6  JFC 2020-04-08 120.0    9.5 111.0 108.1 120.0
+    ##   code       date close change perc_change  open   low  high
+    ## 1  JFC 2020-04-30 143.1   -3.9       -2.65 148.0 143.0 149.0
+    ## 2  JFC 2020-04-29 147.0    5.8        4.11 141.2 139.1 147.0
+    ## 3  JFC 2020-04-28 141.2    6.7        4.98 136.0 135.6 141.4
+    ## 4  JFC 2020-04-27 134.5    0.2        0.15 135.0 134.3 136.5
+    ## 5  JFC 2020-04-24 134.3   -1.7       -1.25 137.8 133.7 137.8
+    ## 6  JFC 2020-04-23 136.0    2.0        1.49 137.0 135.5 140.0
 
 Analytics using `tidyquant`
 ---------------------------
@@ -52,3 +52,31 @@ stock.dt %>%
 ```
 
 ![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
+Correlation Visualisation with `ggcorrplot`
+-------------------------------------------
+
+``` r
+suppressPackageStartupMessages({library(tidyr); library(ggcorrplot)})
+stock.dt %>%
+  group_by(code) %>% 
+  arrange(desc(date)) %>% 
+  # filter(row_number() <= 150) %>% 
+  ungroup() %>% 
+  select(code, date, perc_change) %>% 
+  spread(key = code, value = perc_change) %>% 
+  select(-date) %>% 
+  cor() %>% 
+  ggcorrplot(
+    hc.order = TRUE, 
+    type = "lower",
+    outline.col = "white",
+    ggtheme = ggplot2::theme_gray,
+    colors = c("#6D9EC1", "white", "#E46726"),
+    insig = "blank",
+    lab = TRUE,
+    lab_size = 6
+  )
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)

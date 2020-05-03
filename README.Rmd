@@ -47,3 +47,29 @@ stock.dt %>%
   theme_tq()
 ```
 
+## Correlation Visualisation with `ggcorrplot`
+
+```{r}
+suppressPackageStartupMessages({library(tidyr); library(ggcorrplot)})
+stock.dt %>%
+  group_by(code) %>% 
+  arrange(desc(date)) %>% 
+  # filter(row_number() <= 150) %>% 
+  ungroup() %>% 
+  select(code, date, perc_change) %>% 
+  spread(key = code, value = perc_change) %>% 
+  select(-date) %>% 
+  cor() %>% 
+  ggcorrplot(
+    hc.order = TRUE, 
+    type = "lower",
+    outline.col = "white",
+    ggtheme = ggplot2::theme_gray,
+    colors = c("#6D9EC1", "white", "#E46726"),
+    insig = "blank",
+    lab = TRUE,
+    lab_size = 6
+  )
+
+```
+

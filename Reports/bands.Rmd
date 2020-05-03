@@ -57,7 +57,7 @@ stock_code_info.dt <-
   ) %>% 
   # Mark In Portfolio
   mutate(
-    in_portfolio = codes %in% c("FMETF", "AGI", "ALI", "BPI", "FGEN", "LTG", "MER", "PIZZA", "URC", "EEI")
+    in_portfolio = codes %in% c("FMETF", "AGI", "ALI", "BPI", "FGEN", "LTG", "MER", "URC", "EEI")
   )
 
 top_codes <- 30
